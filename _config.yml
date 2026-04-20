@@ -1,0 +1,15 @@
+title: Kunal's blog
+description: Occasional technical writeups. Code lives in separate repos; this one hosts the narratives.
+url: "https://kunalkhosla.github.io"
+baseurl: "/blogs"
+author:
+  name: Kunal Khosla
+  email: khosla.kunal@gmail.com
+theme: minima
+minima:
+  skin: dark
+  social_links:
+    - { platform: github, user_url: "https://github.com/kunalkhosla" }
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
