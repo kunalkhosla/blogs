@@ -1,85 +1,101 @@
 ---
 layout: post
-title: "Three home networks, and the firewall rules that hold them together"
+title: "Three VLANs, one household: how my home network is actually laid out"
 date: 2026-04-20 20:00:00 -0400
 tags: [home-networking, unifi, home-assistant, vlans]
-excerpt: "Why my smart house lives on its own Wi-Fi network, what the three-network split actually costs, and the seven firewall rules that keep it from breaking Home Assistant."
-excerpt_override: "Why my smart house lives on its own Wi-Fi network, what the three-network split actually costs, and the seven firewall rules that keep it from breaking Home Assistant."
+excerpt: "Why my smart house lives on its own VLAN, what the three-network split actually costs, and the firewall rules that keep it from breaking Home Assistant."
+excerpt_override: "Why my smart house lives on its own VLAN, what the three-network split actually costs, and the firewall rules that keep it from breaking Home Assistant."
 ---
 
-I have 193 tracked wireless devices. That's not a typo. Phones, laptops, two Chromecasts, three printers, a weather station, a pool-pump Wi-Fi box ([see earlier](/blogs/2026/04/20/ecoplug-pool-pump.html)), a garage-door controller, every single smart bulb, a few smart plugs that should probably be smart plugs but aren't, some cameras, a watering controller, a smart scale, a smart lock, a robot vacuum, and so on. Until 2023 they all lived on one flat LAN.
+My UniFi controller currently shows the map below. Three VLANs, each with its own subnet, its own SSID, and its own opinions about what's allowed to talk to what.
 
-That was fine until it wasn't.
+| VLAN | ID | Subnet           | Active leases | What lives here |
+|------|----|------------------|---------------|-----------------|
+| IoT     | 1 | `192.168.0.0/24` | 67  | Everything Wi-Fi-connected that you don't touch daily |
+| Guest   | 2 | `192.168.2.0/24` | 3   | Visitors — captive portal, internet-only |
+| Primary | 3 | `192.168.3.0/24` | 18  | Humans — phones, laptops, tablets |
 
-## Why split
+88 active leases right now, and Home Assistant has tracked 193 distinct MAC addresses across them over time. The ratio of "things in the house that are on the internet" to "humans in the house" is roughly 4-to-1 and climbing.
+
+## Why three VLANs
 
 Two reasons, in order of how much they bothered me.
 
-**1. Trust asymmetry.** Most of the devices on a home network should not be trusted. That Wi-Fi candle from the Christmas box is running a five-year-old ARM firmware with a hard-coded telnet password and a DNS query for some server you've never heard of. My laptop and my bank's 2FA app live on the same physical switch it does. There's no compelling technical reason for the candle and the laptop to be able to ping each other, and if the candle ever gets rolled into a botnet, I'd prefer it couldn't ARP-scan my printer.
+**1. Trust asymmetry.** Most of the devices on a home network should not be trusted. That Wi-Fi candle from the Christmas box is running a five-year-old ARM firmware with a hard-coded telnet password and a DNS query for some server you've never heard of. My laptop and my bank's 2FA app used to live on the same flat LAN that it did. There's no compelling technical reason for the candle and the laptop to be able to ping each other, and if the candle ever joins a botnet, I'd prefer it couldn't ARP-scan my printer.
 
-**2. Inventory hygiene.** It's almost impossible to keep mental track of which device is which on a flat network of 200 clients. The moment you separate "things humans interact with" from "infrastructure that quietly does its job," everything gets easier — finding a device, blocking a device, rebooting a rogue device, auditing what's talking to the internet at 3 AM.
+**2. Inventory hygiene.** It's almost impossible to keep mental track of which device is which on a flat network of 200 clients. Separating "things humans interact with" from "infrastructure that quietly does its job" makes everything easier — finding a device, blocking a device, rebooting a rogue device, auditing what's phoning home at 3 AM.
 
-## The three networks
+## The three VLANs
 
-After a weekend with UniFi's interface and about six broken integrations to reassemble, I landed on three WLANs, each on its own VLAN.
+### IoT (VLAN 1, `192.168.0.0/24`)
 
-### Main
+The heaviest VLAN by a wide margin — 67 active leases today. Smart bulbs, plugs, cameras, thermostats, the pool pump from [last week's dispatch](/blogs/2026/04/20/ecoplug-pool-pump.html), the garage-door controllers, every appliance that ships with a Wi-Fi chip, the robot vacuum, the weather station, the irrigation controller.
 
-Humans. Phones, laptops, tablets, the Apple TV the kids use, my work MacBook. Small number of devices — maybe 20 — but these are the ones with actual trust. This LAN can reach the internet and it can reach certain things on the IoT LAN via explicit firewall rules (below). Nothing can reach *into* this LAN from outside it.
+**Home Assistant itself lives here.** HAOS has a DHCP reservation in this subnet. That is the single most important design choice on this page, because:
 
-### IoT
+- HA is, by volume, a piece of IoT infrastructure. It talks to 60+ devices that all live on VLAN 1. Keeping HA on the same subnet means cross-VLAN firewall rules aren't in the hot path — every automation, every poll, every sensor update stays at L2 inside the same broadcast domain.
+- It inverts the usual "how do I let HA reach my isolated IoT devices?" question into the much simpler "how do I let my Primary-LAN phone reach HA?" question, which is one firewall rule instead of dozens.
+- It also means HA, if it were ever compromised, is already segmented from the machines I bank on. The trust asymmetry stays intact.
 
-Everything else in the house. Smart bulbs, plugs, cameras, thermostats, the pool pump, the garage doors, appliances, the robot vacuum, the weather station, the irrigation controller, and roughly 150 clients I forget I own. The rule I enforce: if it's Wi-Fi-connected and you don't actively touch it every day, it lives here. This VLAN is firewalled off from Main entirely by default — IoT devices cannot initiate connections into the Main LAN. They can reach the internet (some of them *must* — that's how the vendor apps work) but they can't spider the house.
+### Guest (VLAN 2, `192.168.2.0/24`)
 
-### Guest
+Captive portal. Three active leases, which is honestly about right for an afternoon. Anyone who visits connects, puts in their name, and gets an internet-only connection that's walled off from both IoT and Primary.
 
-Captive portal. Anyone who visits connects, enters their name, and gets an internet-only connection that's walled off from both Main and IoT. No device discovery. No mDNS leakage. Each guest is client-isolated from the other guests too, so a friend's phone can't see my parents' laptop.
+The important bit — easy to miss in UniFi's UI — is **Client Device Isolation** on the guest SSID. Without it, a friend's phone can see my parents' laptop if both are on Guest. With it on, every guest is cordoned into their own tiny bubble.
 
-That's the shape. Main / IoT / Guest. All the complexity comes from the fact that these three networks *must occasionally talk to each other*.
+### Primary (VLAN 3, `192.168.3.0/24`)
+
+Humans. 18 active leases today — phones, laptops, tablets, the Apple TV in the living room, my work MacBook. Small by device count, but the whole point of segmentation is that these 18 devices are the trusted ones. Primary can reach the internet, it can reach HA on IoT via one specific rule, and it can participate in cross-VLAN casting via mDNS reflection. That's it. Nothing else reaches into Primary from anywhere.
 
 ## The part nobody warns you about
 
-The moment you put Home Assistant on the Main VLAN and your plugs on the IoT VLAN, everything breaks.
+The moment you isolate IoT from Primary, a lot of stuff quietly stops working.
 
-- Your Chromecasts vanish from the laptop because mDNS doesn't cross VLAN boundaries.
-- Your Home Assistant dashboard shows a switch that Home Assistant itself can no longer reach.
-- SSDP / UPnP discovery stops working for the streaming devices.
-- The printer disappears from everyone.
+- Chromecasts vanish from the phone because mDNS does not cross VLAN boundaries by default.
+- SSDP / UPnP discovery for media stops working.
+- HomeKit / AirPlay targets on the other VLAN go dark.
+- The printer on IoT becomes invisible to the laptop on Primary.
+- Any new integration you try in Home Assistant that relies on broadcast discovery silently fails — the integration adds fine, it just finds zero devices.
 
-Segmentation is not a free lunch. You pay for it in packets that used to travel freely and now require explicit permission to cross a boundary. The UniFi interface calls these DPI-based policies "Traffic Rules" or "Firewall Rules" depending on the era of the UI you're looking at. They're `iptables` rules underneath.
+Segmentation is not a free lunch. You pay for it in packets that used to travel freely and now need explicit permission to cross a boundary. UniFi exposes two separate knobs that matter:
+
+1. **Firewall / Traffic rules** — who can open a unicast connection to whom.
+2. **mDNS reflector** per-VLAN toggle — whether multicast service discovery gets repeated into neighboring VLANs.
+
+You need both. The firewall gets the data across; the reflector gets the *announcement* across so the sending side knows the receiver exists.
 
 ## The rules I wrote
 
-Seven of them, all documented in UniFi with useful names so future-me remembers:
+Around half a dozen, all labelled descriptively so future-me remembers why they exist.
 
-1. **Allow Home Assistant → IoT** — Home Assistant's static IP on Main is permitted to open unicast connections to anything on IoT. This is the big one. HA can poll, push, and listen to my plugs and cameras and bulbs. Without this rule, the dashboard is a museum exhibit.
+1. **Allow Primary → HA (8123)** — phones and laptops on Primary need to reach `http://homeassistant.local:8123` and its API. One rule, one direction, one port. That's the Primary-to-IoT bridge in its entirety for day-to-day use.
 
-2. **Allow Home Assistant → IoT (cameras + media + mgmt)** — a richer version of the above for specific ports. NVR (RTSP), media server (DLNA / Plex), and management (SSH / HTTP admin). Separate from rule 1 because the ports are different and I wanted the audit trail split.
+2. **Allow HA → IoT internal ports** — HA lives on IoT so most traffic is intra-subnet, but a few integrations need ports or protocols that the VLAN's default egress rules would otherwise drop (specifically outbound multicast for certain Wi-Fi plugs and Matter devices). This rule is narrow and exists because one vendor decided their protocol needed TTL > 1.
 
-3. **Allow IoT → Home Assistant (device-triggered)** — the reverse path, scoped tight. Some integrations need the device to initiate (webhooks, MQTT push, multicast announcements). Without this, certain "instant" state updates become 30-second polls.
+3. **Allow Primary → IoT (cameras + media + mgmt)** — direct RTSP from cameras into VLC on the laptop, Plex on the media server, SSH into the NVR for maintenance. Separate from the HA rule because the audit trail is clearer.
 
-4. **Allow Chromecast (cross-VLAN)** — an mDNS / multicast relay so the Chromecasts on IoT still show up in the phone's Cast picker when the phone is on Main. UniFi's "mDNS reflector" does the heavy lifting; this rule permits the return traffic.
+4. **Allow Chromecast reflection** — combined with UniFi's mDNS reflector enabled on both Primary and IoT, this lets the phone's Cast picker see the Chromecasts on IoT. Without it, casting silently fails with a "device not found" that's nearly impossible to debug.
 
-5. **Allow Home Assistant → Guest** — this one sounds wrong and it's worth explaining. Guests occasionally need to cast to the living-room TV. The TV is on IoT. mDNS is blocked across all three VLANs by default. This rule (plus an mDNS relay on the Guest network) bridges just enough multicast for the cast picker to work. No unicast, no device control.
+5. **Allow Guest mDNS for casting** — same idea as #4 but narrower: guests can cast to the living-room TV, which is on IoT. No unicast, no device control, just enough multicast for the Cast picker to populate.
 
-6. **Grown-up devices** — a small DPI group and a rule that routes specific devices through a more permissive set of destinations. Mostly used for work devices that need to reach particular corporate VPN ranges that'd otherwise be blocked.
+6. **Block IoT → Primary** — this is the default, but I have an explicit rule near the top of the chain that drops any IoT-initiated connection into Primary. Belt *and* suspenders. The day an IoT device gets popped, I want the answer to "could it reach the laptop?" to be no, twice over.
 
-7. **Allow HA to Guest for notifications** — HA can push announcements to guest devices (like "the garage is open") if they've joined a specific integration. Rarely used. Exists for completeness.
+7. **Device-group-based egress restrictions** for a handful of devices that should only talk to specific WAN destinations (a couple of appliances I don't trust with open internet). Per-device isolation at the firewall level is easier once you have a few days of traffic flow data to look at.
 
-Every rule is labelled with *why it exists*. Not what it does — the what is in the rule body. The why is in the label. Six months from now I won't remember the scenario; the label will.
+Every rule has a label that names *why* it exists, not what it does. The what is in the rule body; the why is the part I need to read six months later when the printer stops working.
 
 ## What I'd do differently
 
-**Start with the three networks on day one**, not after two years of one flat LAN. Migrating 150+ devices across VLANs means re-pairing half of them, because the vendor app has cached the original subnet and the device refuses to rejoin. Start clean and the pain is frontloaded and smaller.
+**Start with the three VLANs on day one**, not after two years of one flat LAN. Migrating 150+ devices across VLANs means re-pairing a chunk of them, because vendor apps cache the original subnet and the device sullenly refuses to rejoin. Start clean and the pain is frontloaded and smaller.
 
-**Use UniFi's *Device Groups* feature instead of per-device firewall rules.** I spent too long writing one-off rules for specific IPs. A group-based approach ("cameras," "media servers," "kids-only") scales better once you're past about ten devices.
+**Put HA on the IoT VLAN from the start.** I did not do this initially; HA was on Primary for about a year. Cross-VLAN firewall rules for every single integration is a worse life than just treating HA as IoT infrastructure and moving it where the traffic naturally is.
 
-**Pick DHCP reservations over static IPs wherever possible.** Every integration docs page tells you to set the device to a static IP. Don't. Use DHCP reservations on the controller. If you ever renumber the subnet, it's one file to edit instead of forty.
+**DHCP reservations over static IPs.** Every integration doc says "set the device to a static IP." Don't. Use DHCP reservations at the controller. If you ever renumber the subnet — as I did when I split the VLANs — it's one file to edit instead of forty devices to walk around the house to.
 
-**Use a shorter DHCP lease on the IoT VLAN.** Many IoT devices don't gracefully handle IP changes. A 1-hour lease means when a device misbehaves and you force a rejoin, its old lease is gone by the time it comes back. Default lease is 24h, which is purgatory.
+**Short lease on the IoT VLAN.** Many IoT devices don't gracefully handle IP changes. A 1-hour lease means when a device misbehaves and you force a rejoin, its old lease is gone by the time it comes back. The default 24-hour lease is purgatory.
 
 ## The bigger lesson
 
-Network segmentation at home is mostly a documentation problem disguised as a networking problem. The actual VLAN setup takes an afternoon. What takes months is *remembering* which rule applies to what, which device you put on which network, and why the printer suddenly doesn't work two years later.
+Network segmentation at home is mostly a documentation problem disguised as a networking problem. The VLAN setup takes an afternoon. What takes months is *remembering* which rule applies to what, which device you put on which VLAN, and why the printer stopped working two years later.
 
-Name your WLANs something descriptive. Name your firewall rules better than the UI suggests. Write them down somewhere you'll actually look. Future-you will be grateful.
+Name your VLANs something descriptive. Name your firewall rules better than the UI suggests. Write them down somewhere you'll actually look. Future-you will be grateful.
