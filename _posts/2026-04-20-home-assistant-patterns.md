@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "What a four-year-old Home Assistant config has taught me"
-date: 2026-04-20 18:00:00 -0400
+date: 2026-04-20 08:00:00 -0400
 tags: [home-assistant, automation, smart-home]
 excerpt: "An audit of my own Home Assistant install — the patterns that earned their keep, and two habits I'd break if I started again."
 excerpt_override: "An audit of my own Home Assistant install — the patterns that earned their keep, and two habits I'd break if I started again."

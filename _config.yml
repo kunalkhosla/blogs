@@ -12,6 +12,8 @@ author:
   github: kunalkhosla
 
 permalink: /:year/:month/:day/:title:output_ext
+future: true
+timezone: America/New_York
 
 plugins:
   - jekyll-feed
