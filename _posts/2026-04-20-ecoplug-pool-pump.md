@@ -39,7 +39,7 @@ None of the off-the-shelf options worked. We decided to reverse-engineer the pro
 **Capture #2 — same vantage, wider filter, while toggling from phone:**
 - Still no phone→plug unicast on Ethernet.
 - Phone (on same IoT Wi-Fi as plug) broadcasting `pyecoplug`-style discovery on ports 25 and 5888. **Plug ignores it** — different protocol version.
-- Toggles work physically (user sitting next to the pump) but we can't see the commands.
+- Toggles work physically (confirmed at the pump) but we can't see the commands.
 
 This is the key insight: **APs do not forward Wi-Fi↔Wi-Fi unicast onto the Ethernet segment**. Phone and plug are both Wi-Fi clients on the same AP, so their unicast stays inside the AP and HAOS (wired) is blind to it. The capture vantage was wrong.
 
