@@ -13,7 +13,7 @@ excerpt_override: "A dead community integration, a broken Google Home linking fl
 
 This integration was reverse-engineered and implemented in a **single ~3-hour session** on 2026-04-20, collaborating with [Claude Code](https://claude.com/claude-code) (Anthropic's CLI coding agent, running as Opus 4.7 with 1M context).
 
-The human — a Home Assistant user with no prior experience reverse-engineering network protocols — drove from their Mac, handled physical access to the plug, and verified each step in the real world. Claude Code did the investigation, packet analysis, cryptanalysis, Python implementation, and deployment scripting over SSH to the HAOS box.
+I drove from my Mac, handled physical access to the plug, and verified each step in the real world — with no prior experience reverse-engineering network protocols. Claude Code did the investigation, packet analysis, cryptanalysis, Python implementation, and deployment scripting over SSH to the HAOS box.
 
 No specialized tools beyond: Wireshark, PCAPdroid on an Android phone, `tcpdump` on the HAOS SSH add-on, and Python's stdlib.
 
@@ -39,7 +39,7 @@ None of the off-the-shelf options worked. We decided to reverse-engineer the pro
 **Capture #2 — same vantage, wider filter, while toggling from phone:**
 - Still no phone→plug unicast on Ethernet.
 - Phone (on same IoT Wi-Fi as plug) broadcasting `pyecoplug`-style discovery on ports 25 and 5888. **Plug ignores it** — different protocol version.
-- Toggles work physically (user sitting next to the pump) but we can't see the commands.
+- Toggles work physically (confirmed at the pump) but we can't see the commands.
 
 This is the key insight: **APs do not forward Wi-Fi↔Wi-Fi unicast onto the Ethernet segment**. Phone and plug are both Wi-Fi clients on the same AP, so their unicast stays inside the AP and HAOS (wired) is blind to it. The capture vantage was wrong.
 
