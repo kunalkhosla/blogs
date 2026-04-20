@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Three VLANs, one household: how my home network is actually laid out"
-date: 2026-04-20 20:00:00 -0400
+date: 2026-04-20 06:00:00 -0400
 tags: [home-networking, unifi, home-assistant, vlans]
 excerpt: "Why my smart house lives on its own VLAN, what the three-network split actually costs, and the firewall rules that keep it from breaking Home Assistant."
 excerpt_override: "Why my smart house lives on its own VLAN, what the three-network split actually costs, and the firewall rules that keep it from breaking Home Assistant."
