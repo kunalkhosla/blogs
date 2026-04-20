@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#f5efe4"/>
+  <rect width="32" height="32" fill="#0b0b08"/>
   <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle"
-        font-family="ui-monospace, 'JetBrains Mono', Menlo, monospace" font-size="20" font-weight="700" fill="#d73502">◆</text>
+        font-family="ui-monospace, 'JetBrains Mono', Menlo, monospace" font-size="20" font-weight="700" fill="#00d985">◆</text>
 </svg>
