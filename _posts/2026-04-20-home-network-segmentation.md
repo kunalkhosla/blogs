@@ -84,6 +84,18 @@ Around half a dozen, all labelled descriptively so future-me remembers why they 
 
 Every rule has a label that names *why* it exists, not what it does. The what is in the rule body; the why is the part I need to read six months later when the printer stops working.
 
+## While we're here: the DNS layer
+
+One benefit of HA living on the IoT VLAN with a DHCP reservation is that it's a stable, always-on box with a known IP. Which makes it the obvious place to host **AdGuard Home** — a DNS-level ad and tracker blocker. It runs as an add-on inside HAOS, listens on port 53, and does two things that compound:
+
+1. **Blocks ads and trackers at the DNS layer, network-wide.** Every device on every VLAN — the phones on Primary, the TV on IoT, even the guest's laptop if they're using DHCP DNS — resolves through AdGuard. Devices that have no plausible way to run their own ad blocker (smart TVs, every IoT appliance that quietly beacons telemetry) get the same filtering for free.
+
+2. **Surfaces what's actually happening on the network.** The AdGuard UI shows which client made which DNS query. When a new IoT gadget gets added and I want to know who it's phoning home to at 3 AM, I just look — the queries are all there, grouped by client IP. This is the only time I've ever found vendor-surveillance concerns to be *inspectable* rather than hand-wavy.
+
+The router is configured to hand out HAOS's IoT-VLAN IP as the DNS server in every DHCP lease, across all three VLANs. AdGuard forwards anything it doesn't block to a real upstream (1.1.1.1 with DNS-over-TLS).
+
+**The tradeoff:** if HA goes down, DNS goes down for the whole house — which, in practice, means the internet feels broken until the box is back. I considered this for a while. Counter-arguments that won me over: HA hasn't crashed in any way that took out the container in the year I've been running this, AdGuard's own uptime is better than most consumer routers' built-in DNS, and the "wait, is the internet down?" failure mode is not meaningfully different from "wait, did the router reboot?" — which I used to get from ISP-supplied hardware routinely.
+
 ## What I'd do differently
 
 **Start with the three VLANs on day one**, not after two years of one flat LAN. Migrating 150+ devices across VLANs means re-pairing a chunk of them, because vendor apps cache the original subnet and the device sullenly refuses to rejoin. Start clean and the pain is frontloaded and smaller.
@@ -93,6 +105,8 @@ Every rule has a label that names *why* it exists, not what it does. The what is
 **DHCP reservations over static IPs.** Every integration doc says "set the device to a static IP." Don't. Use DHCP reservations at the controller. If you ever renumber the subnet — as I did when I split the VLANs — it's one file to edit instead of forty devices to walk around the house to.
 
 **Short lease on the IoT VLAN.** Many IoT devices don't gracefully handle IP changes. A 1-hour lease means when a device misbehaves and you force a rejoin, its old lease is gone by the time it comes back. The default 24-hour lease is purgatory.
+
+**Point DHCP at AdGuard before you do anything else.** If I'd started with the DNS layer in place, I would have caught a handful of "that integration sends every API call through a telemetry domain" decisions much earlier.
 
 ## The bigger lesson
 
