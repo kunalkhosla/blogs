@@ -7,7 +7,7 @@ excerpt: "An audit of my own Home Assistant install — the patterns that earned
 excerpt_override: "An audit of my own Home Assistant install — the patterns that earned their keep, and two habits I'd break if I started again."
 ---
 
-My `configuration.yaml` was first written in late 2022. It's survived three HAOS major upgrades, about forty automations, a decent pile of HACS integrations, one whole-house rewire, and one pool pump that needed its Wi-Fi protocol reverse-engineered ([see the last dispatch](/blogs/2026/04/20/ecoplug-pool-pump.html)).
+My `configuration.yaml` was first written in late 2022. It's survived three HAOS major upgrades, about forty automations, a decent pile of HACS integrations, one whole-house rewire, and one pool pump that needed its Wi-Fi protocol reverse-engineered ([see the companion dispatch](/blogs/2026/04/20/ecoplug-pool-pump.html)).
 
 Here's what's actually worked — concrete patterns pulled straight from a live install. And two things I'd fix if I started today. Entity names in the examples are genericized; the structure is not.
 
