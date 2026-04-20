@@ -1,0 +1,20 @@
+<div class="terminal-bar" aria-hidden="true">
+  <span class="terminal-bar__prompt">
+    <span class="terminal-bar__user">kunal</span><span class="terminal-bar__at">@</span><span class="terminal-bar__host">dispatches</span><span class="terminal-bar__sep">:</span><span class="terminal-bar__path">~/posts</span><span class="terminal-bar__dollar">$</span>
+  </span>
+  <span class="terminal-bar__cmd">cat {% if page.layout == 'post' %}{{ page.path | replace: '_posts/', '' }}{% else %}_posts/*{% endif %}</span><span class="terminal-bar__cursor"></span>
+</div>
+
+<header class="masthead">
+  <a href="{{ '/' | relative_url }}" class="masthead__brand">
+    <span class="masthead__brand-mark">†</span>
+    <span class="masthead__brand-name"><span class="italic">Engineering</span>&nbsp;Dispatches</span>
+  </a>
+  <nav class="masthead__nav">
+    <a href="{{ '/' | relative_url }}">Index</a>
+    <span class="masthead__rule"></span>
+    <a href="{{ '/feed.xml' | relative_url }}">Feed</a>
+    <span class="masthead__rule"></span>
+    <a href="https://github.com/{{ site.author.github }}" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+</header>

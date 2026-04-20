@@ -1,0 +1,57 @@
+---
+layout: default
+---
+<article class="post">
+  <header class="post__header">
+    {% assign post_count = site.posts | size %}
+    {% for p in site.posts %}
+      {% if p.url == page.url %}
+        {% assign issue = forloop.rindex %}
+      {% endif %}
+    {% endfor %}
+    <div class="post__issue" aria-hidden="true">
+      <span class="post__issue-label">Dispatch</span>
+      <span class="post__issue-number">№&nbsp;{% if issue < 10 %}00{% elsif issue < 100 %}0{% endif %}{{ issue }}</span>
+    </div>
+
+    <h1 class="post__title">{{ page.title }}</h1>
+
+    {% if page.excerpt_override %}
+      <p class="post__dek">{{ page.excerpt_override }}</p>
+    {% endif %}
+
+    <div class="post__meta">
+      <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %-d, %Y" }}</time>
+      <span class="post__meta-dot">·</span>
+      {% assign words = content | number_of_words %}
+      <span>{{ words | divided_by: 200 | at_least: 1 }} min read</span>
+      {% if page.tags %}<span class="post__meta-dot">·</span>
+      <span class="post__meta-tags">
+        {% for tag in page.tags %}<span>{{ tag }}</span>{% unless forloop.last %}<span> / </span>{% endunless %}{% endfor %}
+      </span>{% endif %}
+    </div>
+  </header>
+
+  <div class="post__content">
+    {{ content }}
+  </div>
+
+  <footer class="post__footer">
+    <div class="post__footer-rule"></div>
+    <div class="post__footer-grid">
+      <div>
+        <div class="post__footer-label">End of Dispatch</div>
+        <p class="post__footer-text">
+          Filed {{ page.date | date: "%B %-d, %Y" }} by
+          <a href="https://github.com/{{ site.author.github }}">{{ site.author.name }}</a>.
+        </p>
+      </div>
+      <div>
+        <div class="post__footer-label">Next</div>
+        <p class="post__footer-text">
+          <a href="{{ '/' | relative_url }}">Back to the index →</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+</article>

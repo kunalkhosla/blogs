@@ -1,0 +1,52 @@
+---
+layout: default
+---
+<section class="hero">
+  <div class="hero__issue">VOLUME&nbsp;I · {% assign n = site.posts | size %}{% if n < 10 %}0{% endif %}{{ n }} DISPATCHES</div>
+  <h1 class="hero__title">
+    <span class="hero__title-pre">Notes from the</span><br>
+    <em class="hero__title-main">engineering</em>
+    <span class="hero__title-post">margin.</span>
+  </h1>
+  <p class="hero__lede">
+    An occasional journal of reverse-engineering, home
+    automation, and whatever else declines to yield to the
+    obvious solution. Published when the work warrants it.
+  </p>
+  <div class="hero__meta">
+    <span>— by {{ site.author.name }}</span>
+    <span class="hero__dot">·</span>
+    <span>writing from the open internet</span>
+  </div>
+</section>
+
+<section class="dispatches">
+  <header class="dispatches__head">
+    <span class="dispatches__label">Index of Dispatches</span>
+    <span class="dispatches__rule"></span>
+    <span class="dispatches__count">{{ site.posts | size }} total</span>
+  </header>
+
+  {% for post in site.posts %}
+  {% assign n = forloop.rindex %}
+  <article class="dispatch">
+    <a class="dispatch__link" href="{{ post.url | relative_url }}">
+      <div class="dispatch__number" aria-hidden="true">№&nbsp;{% if n < 10 %}00{% elsif n < 100 %}0{% endif %}{{ n }}</div>
+      <div class="dispatch__body">
+        <div class="dispatch__meta">
+          <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%d · %m · %Y" }}</time>
+          {% if post.tags %}<span class="dispatch__sep">·</span><span class="dispatch__tags">
+            {% for tag in post.tags %}<span>{{ tag }}</span>{% unless forloop.last %}<span class="dispatch__tag-sep">/</span>{% endunless %}{% endfor %}
+          </span>{% endif %}
+        </div>
+        <h2 class="dispatch__title">{{ post.title }}</h2>
+        {% if post.excerpt %}<p class="dispatch__excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 220 }}</p>{% endif %}
+        <div class="dispatch__cta">
+          <span class="dispatch__read">Read the dispatch</span>
+          <span class="dispatch__arrow">→</span>
+        </div>
+      </div>
+    </a>
+  </article>
+  {% endfor %}
+</section>

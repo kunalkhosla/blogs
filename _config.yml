@@ -1,15 +1,24 @@
-title: Kunal's blog
-description: Occasional technical writeups. Code lives in separate repos; this one hosts the narratives.
+title: Engineering Dispatches
+tagline: Occasional deep-dives when off-the-shelf doesn't cut it.
+description: >-
+  A small hand-bound journal of reverse-engineering, home automation, and
+  whatever else won't yield to the obvious solution.
 url: "https://kunalkhosla.github.io"
 baseurl: "/blogs"
+
 author:
   name: Kunal Khosla
   email: khosla.kunal@gmail.com
-theme: minima
-minima:
-  skin: dark
-  social_links:
-    - { platform: github, user_url: "https://github.com/kunalkhosla" }
+  github: kunalkhosla
+
+permalink: /:year/:month/:day/:title:output_ext
+
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
+
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - vendor

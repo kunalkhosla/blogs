@@ -1,0 +1,10 @@
+{% include head.html %}
+<body class="{% if page.layout %}page-{{ page.layout }}{% endif %}">
+  <div class="scroll-progress" aria-hidden="true"></div>
+  {% include nav.html %}
+  <main class="main">
+    {{ content }}
+  </main>
+  {% include footer.html %}
+</body>
+</html>
