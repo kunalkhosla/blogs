@@ -4,8 +4,8 @@
     <div class="colophon__col">
       <div class="colophon__label">Colophon</div>
       <p>
-        Set in <span class="italic">Instrument Serif</span> &amp; JetBrains Mono.
-        Built with Jekyll. Published on GitHub Pages.
+        Set in <span class="italic">JetBrains Mono</span> &amp; Departure Mono.
+        Built with Jekyll. Hosted on GitHub Pages.
       </p>
     </div>
     <div class="colophon__col">
@@ -22,8 +22,8 @@
       </p>
     </div>
     <div class="colophon__col colophon__col--right">
-      <div class="colophon__label">MMXXVI</div>
-      <p class="colophon__mark">№{% if page.issue %} {{ page.issue | prepend: '000' | slice: -3, 3 }}{% else %} —{% endif %}</p>
+      <div class="colophon__label">&copy; 2026</div>
+      <p class="colophon__mark">{% if page.issue %}№ {{ page.issue | prepend: '000' | slice: -3, 3 }}{% else %}◆ ◆ ◆{% endif %}</p>
     </div>
   </div>
 </footer>
