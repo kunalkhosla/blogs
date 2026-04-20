@@ -11,9 +11,9 @@ My UniFi controller currently shows the map below. Three VLANs, each with its ow
 
 | VLAN | ID | Subnet           | Active leases | What lives here |
 |------|----|------------------|---------------|-----------------|
-| IoT     | 1 | `192.168.0.0/24` | 67  | Everything Wi-Fi-connected that you don't touch daily |
-| Guest   | 2 | `192.168.2.0/24` | 3   | Visitors — captive portal, internet-only |
-| Primary | 3 | `192.168.3.0/24` | 18  | Humans — phones, laptops, tablets |
+| IoT     | 1 | `192.168.10.0/24` | 67  | Everything Wi-Fi-connected that you don't touch daily |
+| Guest   | 2 | `192.168.20.0/24` | 3   | Visitors — captive portal, internet-only |
+| Primary | 3 | `192.168.30.0/24` | 18  | Humans — phones, laptops, tablets |
 
 88 active leases right now, and Home Assistant has tracked 193 distinct MAC addresses across them over time. The ratio of "things in the house that are on the internet" to "humans in the house" is roughly 4-to-1 and climbing.
 
@@ -27,7 +27,7 @@ Two reasons, in order of how much they bothered me.
 
 ## The three VLANs
 
-### IoT (VLAN 1, `192.168.0.0/24`)
+### IoT (VLAN 1, `192.168.10.0/24`)
 
 The heaviest VLAN by a wide margin — 67 active leases today. Smart bulbs, plugs, cameras, thermostats, the pool pump from [last week's dispatch](/blogs/2026/04/20/ecoplug-pool-pump.html), the garage-door controllers, every appliance that ships with a Wi-Fi chip, the robot vacuum, the weather station, the irrigation controller.
 
@@ -37,13 +37,13 @@ The heaviest VLAN by a wide margin — 67 active leases today. Smart bulbs, plug
 - It inverts the usual "how do I let HA reach my isolated IoT devices?" question into the much simpler "how do I let my Primary-LAN phone reach HA?" question, which is one firewall rule instead of dozens.
 - It also means HA, if it were ever compromised, is already segmented from the machines I bank on. The trust asymmetry stays intact.
 
-### Guest (VLAN 2, `192.168.2.0/24`)
+### Guest (VLAN 2, `192.168.20.0/24`)
 
 Captive portal. Three active leases, which is honestly about right for an afternoon. Anyone who visits connects, puts in their name, and gets an internet-only connection that's walled off from both IoT and Primary.
 
 The important bit — easy to miss in UniFi's UI — is **Client Device Isolation** on the guest SSID. Without it, a friend's phone can see my parents' laptop if both are on Guest. With it on, every guest is cordoned into their own tiny bubble.
 
-### Primary (VLAN 3, `192.168.3.0/24`)
+### Primary (VLAN 3, `192.168.30.0/24`)
 
 Humans. 18 active leases today — phones, laptops, tablets, the Apple TV in the living room, my work MacBook. Small by device count, but the whole point of segmentation is that these 18 devices are the trusted ones. Primary can reach the internet, it can reach HA on IoT via one specific rule, and it can participate in cross-VLAN casting via mDNS reflection. That's it. Nothing else reaches into Primary from anywhere.
 
