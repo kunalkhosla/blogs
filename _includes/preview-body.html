@@ -1,0 +1,168 @@
+<div class="scroll-progress" aria-hidden="true"></div>
+
+<div class="terminal-bar" aria-hidden="true">
+  <span class="terminal-bar__prompt">
+    <span class="terminal-bar__user">kunal</span><span class="terminal-bar__at">@</span><span class="terminal-bar__host">dispatches</span><span class="terminal-bar__sep">:</span><span class="terminal-bar__path">~/posts</span><span class="terminal-bar__dollar">$</span>
+  </span>
+  <span class="terminal-bar__cmd">cat _posts/*</span><span class="terminal-bar__cursor"></span>
+</div>
+
+<header class="masthead">
+  <a href="{{ '/previews/' | relative_url }}" class="masthead__brand">
+    <span class="masthead__brand-mark">◆</span>
+    <span class="masthead__brand-name">engineering&nbsp;<span class="italic">dispatches</span></span>
+  </a>
+  <nav class="masthead__nav">
+    <a href="{{ '/' | relative_url }}">Index</a>
+    <span class="masthead__rule"></span>
+    <a href="{{ '/previews/' | relative_url }}">← Previews</a>
+    <span class="masthead__rule"></span>
+    <a href="https://github.com/kunalkhosla">GitHub ↗</a>
+  </nav>
+</header>
+
+<main class="main">
+  <section class="hero">
+    <div class="hero__issue">VOLUME&nbsp;I · 03 DISPATCHES</div>
+    <h1 class="hero__title">
+      <span class="hero__title-pre">Notes from the</span><br>
+      <em class="hero__title-main">engineering</em>
+      <span class="hero__title-post">margin.</span>
+    </h1>
+    <p class="hero__lede">
+      An occasional journal of reverse-engineering, home automation,
+      and whatever else declines to yield to the obvious solution.
+      Published when the work warrants it.
+    </p>
+    <div class="hero__meta">
+      <span>— by Kunal Khosla</span>
+      <span class="hero__dot">·</span>
+      <span>writing from the open internet</span>
+    </div>
+  </section>
+
+  <section class="dispatches">
+    <header class="dispatches__head">
+      <span class="dispatches__label">Index of Dispatches</span>
+      <span class="dispatches__rule"></span>
+      <span class="dispatches__count">3 total</span>
+    </header>
+
+    <article class="dispatch">
+      <a class="dispatch__link" href="#">
+        <div class="dispatch__number" aria-hidden="true">№&nbsp;003</div>
+        <div class="dispatch__body">
+          <div class="dispatch__meta">
+            <time>20 · 04 · 2026</time>
+            <span class="dispatch__sep">·</span>
+            <span class="dispatch__tags">
+              <span>home-assistant</span><span class="dispatch__tag-sep">/</span><span>reverse-engineering</span><span class="dispatch__tag-sep">/</span><span>iot</span>
+            </span>
+          </div>
+          <h2 class="dispatch__title">Cracking a pool pump's Wi-Fi protocol in an afternoon</h2>
+          <p class="dispatch__excerpt">A dead community integration, a broken Google Home linking flow, and an afternoon with a packet sniffer. Notes on building a local Home Assistant integration for a pool-pump Wi-Fi box.</p>
+          <div class="dispatch__cta">
+            <span class="dispatch__read">Read the dispatch</span>
+            <span class="dispatch__arrow">→</span>
+          </div>
+        </div>
+      </a>
+    </article>
+
+    <article class="dispatch">
+      <a class="dispatch__link" href="#">
+        <div class="dispatch__number" aria-hidden="true">№&nbsp;002</div>
+        <div class="dispatch__body">
+          <div class="dispatch__meta">
+            <time>20 · 04 · 2026</time>
+            <span class="dispatch__sep">·</span>
+            <span class="dispatch__tags">
+              <span>home-assistant</span><span class="dispatch__tag-sep">/</span><span>automation</span>
+            </span>
+          </div>
+          <h2 class="dispatch__title">What a four-year-old Home Assistant config has taught me</h2>
+          <p class="dispatch__excerpt">An audit of my own Home Assistant install — the patterns that earned their keep, and two habits I'd break if I started again.</p>
+          <div class="dispatch__cta">
+            <span class="dispatch__read">Read the dispatch</span>
+            <span class="dispatch__arrow">→</span>
+          </div>
+        </div>
+      </a>
+    </article>
+
+    <article class="dispatch">
+      <a class="dispatch__link" href="#">
+        <div class="dispatch__number" aria-hidden="true">№&nbsp;001</div>
+        <div class="dispatch__body">
+          <div class="dispatch__meta">
+            <time>20 · 04 · 2026</time>
+            <span class="dispatch__sep">·</span>
+            <span class="dispatch__tags"><span>agents</span><span class="dispatch__tag-sep">/</span><span>llm</span></span>
+          </div>
+          <h2 class="dispatch__title">Flow is code. Language is LLM.</h2>
+          <p class="dispatch__excerpt">Why we ripped out an agent framework after months of fighting its hallucinations — and the simpler pattern that replaced it.</p>
+          <div class="dispatch__cta">
+            <span class="dispatch__read">Read the dispatch</span>
+            <span class="dispatch__arrow">→</span>
+          </div>
+        </div>
+      </a>
+    </article>
+  </section>
+
+  <section class="post" style="margin-top: 64px;">
+    <header class="post__header">
+      <div class="post__issue">
+        <span class="post__issue-label">Dispatch</span>
+        <span class="post__issue-number">№&nbsp;001</span>
+      </div>
+      <h1 class="post__title">A sample post header</h1>
+      <p class="post__dek">Enough body copy to show how headings, code, quotes, and tables feel in this theme.</p>
+      <div class="post__meta">
+        <time>April 20, 2026</time>
+        <span class="post__meta-dot">·</span>
+        <span>5 min read</span>
+      </div>
+    </header>
+    <div class="post__content">
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. A paragraph of body copy so the measure, leading, and typographic color come through at realistic length. The rhythm of a body paragraph is what ultimately decides whether a theme is pleasant to read or a chore.</p>
+      <h2>A section heading</h2>
+      <p>Here's an inline <code>snippet_of_code()</code> followed by a block:</p>
+      <pre><code>python3 src/crafter.py 192.168.0.87 off
+[OFF] txid=7cdd2dac sending 152 bytes
+  reply: txid=7cdd2dac state=OFF</code></pre>
+      <blockquote><p>A pull-quote sits here, italicized and set apart. Its job is to make one sentence feel load-bearing.</p></blockquote>
+      <h3>A subheading</h3>
+      <table>
+        <thead><tr><th>Bytes</th><th>Field</th></tr></thead>
+        <tbody>
+          <tr><td>0–3</td><td>Transaction ID</td></tr>
+          <tr><td>4–15</td><td>Fixed header</td></tr>
+          <tr><td>16–71</td><td>XOR-obfuscated body</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer class="colophon">
+  <div class="colophon__rule"></div>
+  <div class="colophon__grid">
+    <div class="colophon__col">
+      <div class="colophon__label">Colophon</div>
+      <p>Preview theme. Built with Jekyll.</p>
+    </div>
+    <div class="colophon__col">
+      <div class="colophon__label">Author</div>
+      <p><a href="#">Kunal Khosla</a></p>
+    </div>
+    <div class="colophon__col">
+      <div class="colophon__label">Elsewhere</div>
+      <p><a href="#">Atom feed</a></p>
+    </div>
+    <div class="colophon__col colophon__col--right">
+      <div class="colophon__label">&copy; 2026</div>
+      <p class="colophon__mark">◆ ◆ ◆</p>
+    </div>
+  </div>
+</footer>
