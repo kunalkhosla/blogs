@@ -163,7 +163,10 @@ The rule I've settled on: if the first-party integration doesn't exist, or if it
 
 This is what I see when I open the app:
 
-![Home Assistant dashboard — the landing view of my install](/blogs/assets/images/home-assistant-dashboard.png)
+<figure>
+  <img src="/blogs/assets/images/home-assistant-dashboard.png" alt="Home Assistant dashboard — the landing view of my install">
+  <figcaption>The mobile landing view.</figcaption>
+</figure>
 
 Top row is a set of **state pills**: alarm state, whether any door is open, irrigation, patio lights, TVs, the pool pump. Each one is a one-tap toggle and a glance-able current value. No dashboard panel, no deep-link — the pills are the index of "things I touch often."
 
