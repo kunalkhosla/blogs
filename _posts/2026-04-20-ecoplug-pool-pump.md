@@ -1,10 +1,10 @@
 ---
 layout: post
-title: "Cracking a pool pump's Wi-Fi protocol in an afternoon"
+title: "Cracking a pool pump's Wi-Fi protocol in an evening"
 date: 2026-04-20 12:00:00 -0400
 tags: [home-assistant, reverse-engineering, iot, udp]
 excerpt: "How we reverse-engineered the DEWENWILS / ECO Plugs protocol and built a local Home Assistant integration — with Claude Code as the co-pilot."
-excerpt_override: "A dead community integration, a broken Google Home linking flow, and an afternoon with a packet sniffer. Notes on building a local Home Assistant integration for a pool-pump Wi-Fi box."
+excerpt_override: "A dead community integration, a broken Google Home linking flow, and an evening with a packet sniffer. Notes on building a local Home Assistant integration for a pool-pump Wi-Fi box."
 ---
 
 > Code: **[github.com/kunalkhosla/ecoplug-homeassistant](https://github.com/kunalkhosla/ecoplug-homeassistant)**
