@@ -9,9 +9,7 @@ excerpt_override: "How one afternoon, Gemini 2.5 Flash Image, Next.js, and a Hos
 
 We've lived in our house for a few years and have a running list of "what if we changed the…" arguments that never quite resolve. Repaint the whole thing black? Swap the shingles for standing-seam metal? Gut the landscaping? Every one of those ideas dies somewhere between the conversation and Google Images, because none of those renders are of *our* house.
 
-So I built a tool that *is* of our house. One address, a few pre-uploaded angles, a prompt box, and three photorealistic variations per tap. About an afternoon of work, most of it spent on the loop polish rather than the model call.
-
-Live URL (genuinely private, just us): `reimagine.srv1539585.hstgr.cloud`.
+So I built a tool that *is* of our house. One address, a few pre-uploaded angles, a prompt box, and three photorealistic variations per tap. About an afternoon of work, most of it spent on the loop polish rather than the model call. I'm keeping the URL off this post — it's a single-address tool for one household and there's no reason to stand up a public sign to it.
 
 ## What it does
 
