@@ -64,7 +64,7 @@ The first share button used the Web Share API with the image file attached. Fine
 So I added a server-side share store — each generated image gets written to `/app/data/shares/<id>.png` with an optional JSON sidecar for the label. The share page at `/s/<id>` is a tiny server-rendered viewer with full Open Graph metadata:
 
 ```html
-<meta property="og:title"       content="A Home Reimagining — 784 Dakota Trail">
+<meta property="og:title"       content="A Home Reimagining">
 <meta property="og:description" content='"Modern farmhouse, black metal roof…"'>
 <meta property="og:image"       content="https://…/api/shares/Ab3xR7_k2g-z">
 <meta property="og:image:type"  content="image/png">
