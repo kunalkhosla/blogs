@@ -44,7 +44,6 @@ The photos never touch the git repo — they're bind-mounted at container runtim
 ```yaml
 services:
   home-reimagine:
-    image: ghcr.io/kunalkhosla/784dakota-home-reimagine:latest
     volumes:
       - ./photos:/app/photos:ro
       - ./shares:/app/data/shares:rw
