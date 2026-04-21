@@ -336,6 +336,31 @@ body {
 .post__content pre::before { content: "$"; position: absolute; top: var(--s-5); left: var(--s-5); color: var(--code-warn); font-weight: 600; }
 .post__content pre code { background: none; border: 0; padding: 0; color: inherit; white-space: pre; font-size: inherit; }
 
+.post__content p > img,
+.post__content figure > img {
+  display: block;
+  max-width: 420px;
+  width: 100%;
+  height: auto;
+  margin: var(--s-7) auto;
+  padding: var(--s-3);
+  background: var(--bg-tint);
+  border: 1px solid var(--amber-soft);
+  border-radius: 2px;
+  box-shadow: 0 0 24px rgba(255, 176, 0, 0.06);
+  box-sizing: border-box;
+}
+.post__content figure { margin: var(--s-7) auto; max-width: 420px; text-align: center; }
+.post__content figure > img { margin: 0 auto var(--s-3); }
+.post__content figure figcaption {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-style: italic;
+  color: var(--amber-dim);
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
 .post__content table {
   width: 100%; border-collapse: collapse; margin: var(--s-6) 0;
   font-family: var(--font-mono); font-size: var(--fs-sm); line-height: 1.5;
