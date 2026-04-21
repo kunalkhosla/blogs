@@ -159,6 +159,22 @@ Sixteen custom integrations currently live in `/config/custom_components/`, inst
 
 The rule I've settled on: if the first-party integration doesn't exist, or if it requires a cloud account I don't want to maintain, check HACS before I assume I'm stuck. Nine times out of ten someone's already done the work — and when they haven't, the [Jekyll theme next door](/blogs/2026/04/20/ecoplug-pool-pump.html) shows it's surprisingly tractable to fill in.
 
+## the dashboard, room by room
+
+This is what I see when I open the app:
+
+![Home Assistant dashboard — the landing view of my install](/blogs/assets/images/home-assistant-dashboard.png)
+
+Top row is a set of **state pills**: alarm state, whether any door is open, irrigation, patio lights, TVs, the pool pump. Each one is a one-tap toggle and a glance-able current value. No dashboard panel, no deep-link — the pills are the index of "things I touch often."
+
+Below the greeting is a **commute estimate** and a **weather card**. Then the **presence row**: one avatar per person, with a green home badge when they're on-network. Underneath, the three **thermostat tiles** for the zones I actively tune.
+
+Past the fold — not in the screenshot — is a list of rooms: _Office, Kitchen, Family Room, Living Room, Bedroom Hallway, Master Bedroom_. Each one is a tile. Tapping a tile doesn't toggle anything; it **opens a dedicated page for that room**. Lights, sensors, thermostat, occupancy, entertainment — the controls and readings scoped to that room, with nothing from the rest of the house to scroll through.
+
+The design rule is: the landing page is for **state I want to see**, and the room pages are for **things I want to change**. When someone asks _"is the dishwasher still running?"_, they don't read the landing view — they tap the kitchen tile. When I walk into the living room at 9 PM, I don't need to see the garage thermostat.
+
+This is worth the setup cost because it fixes the one thing Home Assistant does badly out of the box: the default "Overview" wants to show you everything at once. Everything is nothing.
+
 ## // two things I'd change
 
 Being honest with myself:
