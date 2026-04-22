@@ -1,10 +1,10 @@
 ---
 layout: post
-title: "The afternoon I renamed every automation in my house"
+title: "I renamed every automation in my house and found four bugs"
 date: 2026-04-22 09:00:00 -0400
 tags: [home-assistant, automation, smart-home]
-excerpt: "Four years of ad-hoc alias choices, 56 automations, one sitting to rename them all. The format mattered less than the audit that came with it."
-excerpt_override: "Four years of ad-hoc alias choices, 56 automations, one sitting to rename them all. The format mattered less than the audit that came with it."
+excerpt: "Four years of ad-hoc alias choices, fifty-six automations, one sitting to rename them all — and four real bugs I'd assumed were working fine."
+excerpt_override: "Four years of ad-hoc alias choices, fifty-six automations, one sitting to rename them all — and four real bugs I'd assumed were working fine."
 ---
 
 My Home Assistant automations list had grown to 56 entries over four years, each one created in a different mood by the person I was that week. Some started with verbs (`Turn off iron after 30 mins`), some with subjects (`Family Room Block Button`), some with vendor names (`Reolink driveway person/animal/vehicle notification`), one with all-caps for no reason (`OFF - Driveway Retaining Wall - 10 PM`). When I wanted to find the motion-lights automation for the kitchen, I had to scroll past every automation whose name started with "Turn" before I got there.
@@ -79,4 +79,4 @@ Labels and areas were done separately via the WebSocket API (`config/entity_regi
 
 A naming convention isn't really about the names. It's a forcing function for reading everything you've built in one sitting. The format you land on matters less than the fact that you have to open every automation to apply it. I found four real bugs doing this — in code that was, by my estimation, *"working fine."*
 
-Set aside an afternoon. Pick any convention that reads cleanly in *your* automations list, not someone else's. The part that pays back isn't the alphabetical clustering — it's the audit you do on the way there.
+Block out a few hours. Pick any convention that reads cleanly in *your* automations list, not someone else's. The part that pays back isn't the alphabetical clustering — it's the audit you do on the way there.
