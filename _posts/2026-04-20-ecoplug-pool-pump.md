@@ -10,67 +10,63 @@ excerpt_override: "A dead community integration, a broken Google Home linking fl
 > Code: **[github.com/kunalkhosla/ecoplug-homeassistant](https://github.com/kunalkhosla/ecoplug-homeassistant)**
 >
 > HACS PR: [hacs/default#7150](https://github.com/hacs/default/pull/7150) (in review)
+>
+> The device: **[DEWENWILS Pool Pump Timer (Wi-Fi) on Amazon](https://www.amazon.com/DEWENWILS-Outdoor-Wireless-Controller-Compatible/dp/B07PP2KNNH)**
 
-This integration was reverse-engineered and implemented in a **single ~3-hour session** on 2026-04-20, collaborating with [Claude Code](https://claude.com/claude-code) (Anthropic's CLI coding agent, running as Opus 4.7 with 1M context).
+I have an outdoor Wi-Fi switch on my pool pump — a DEWENWILS box that runs on the ECO Plugs app. Nice hardware, but the app is the only way to talk to it, and I wanted it in Home Assistant so I could schedule it alongside everything else in the house. None of the obvious paths worked, so I sat down one evening and reverse-engineered the thing.
 
-I drove from my Mac, handled physical access to the plug, and verified each step in the real world — with no prior experience reverse-engineering network protocols. Claude Code did the investigation, packet analysis, cryptanalysis, Python implementation, and deployment scripting over SSH to the HAOS box.
+Total time: about three hours. I worked alongside [Claude Code](https://claude.com/claude-code) (Anthropic's CLI coding agent, running as Opus 4.7 with 1M context). I drove from my Mac, walked outside to the plug whenever we needed to confirm something physically, and acted as the human in the loop. Claude Code did the packet analysis, the cryptanalysis, the Python, and the deploy-over-SSH dance. I'd never reverse-engineered a network protocol before.
 
-No specialized tools beyond: Wireshark, PCAPdroid on an Android phone, `tcpdump` on the HAOS SSH add-on, and Python's stdlib.
+The whole thing used pretty ordinary tools: Wireshark, PCAPdroid on my Android phone, `tcpdump` from the HAOS SSH add-on, and Python's standard library. Nothing exotic.
 
-## The journey
+## How it actually went
 
-### Dead ends (first hour)
+### The first hour was all dead ends
 
-1. **Assumed it was Tuya** — these plugs look like rebranded Tuya/Smart Life devices, so the first plan was to use HA's Tuya integration. Wrong: DEWENWILS uses the ECO Plugs app, a completely separate ecosystem.
-2. **Tried the existing `pyecoplug` community integration** via HACS — installed fine, but never discovered the plug. The integration hangs startup and produces no switch entity on current HA.
-3. **Tried Google Home as a bridge** — ECO Plugs' OAuth linking to Google was broken (completes login but returns no devices to Google).
-4. **Looked at Tasmota / ESPHome flashing** — doable (the device has an ESP8266), but requires disassembly and soldering on a 240V outdoor pool-pump box.
-5. **Considered replacing the hardware** with a Shelly Pro 2 + definite-purpose contactor. Works long-term but ~$80 and an electrician.
+A few things I tried before resorting to packet captures:
 
-None of the off-the-shelf options worked. We decided to reverse-engineer the protocol ourselves.
+1. **Assumed it was a Tuya device.** These plugs *look* like every other rebranded Tuya/Smart Life gadget, so I figured Home Assistant's Tuya integration would just pick it up. Nope — DEWENWILS uses the ECO Plugs app, which is its own little ecosystem.
+2. **Tried the existing `pyecoplug` HACS integration.** Installed cleanly, then sat there forever. Never discovered the plug, never produced a switch entity. It seems to be aimed at an older firmware.
+3. **Tried Google Home as a bridge.** The ECO Plugs OAuth flow into Google completes the login… and then hands Google zero devices. So that was out.
+4. **Looked at flashing Tasmota or ESPHome.** The hardware is an ESP8266, so technically possible — but it lives inside a sealed 240V outdoor box on the side of my house. Disassembling and soldering on that felt like the wrong evening project.
+5. **Considered just replacing it** with a Shelly Pro 2 plus a contactor. Works fine long-term, but it's roughly $80 plus an electrician.
 
-### Reverse engineering
+By that point I was a little annoyed and a lot curious, so we went straight at the protocol.
 
-**Capture #1 — from HAOS Ethernet, filter `host <plug_ip>`:**
-- Plug broadcasts 272-byte UDP packets to `255.255.255.255:10228` every 2 sec. Starts with magic `\x00...\x55\xAA\x55\xAA\x00"ECO Plugs\x00"`.
-- Plug resolves `server1.eco-plugs.net` via DNS periodically but **never actually talks to the cloud** during the capture.
-- No phone→plug unicast visible.
+### Watching the wire
 
-**Capture #2 — same vantage, wider filter, while toggling from phone:**
-- Still no phone→plug unicast on Ethernet.
-- Phone (on same IoT Wi-Fi as plug) broadcasting `pyecoplug`-style discovery on ports 25 and 5888. **Plug ignores it** — different protocol version.
-- Toggles work physically (confirmed at the pump) but we can't see the commands.
+**First capture, from the HAOS Ethernet port:**
+The plug is chatty. It broadcasts a 272-byte UDP packet to `255.255.255.255:10228` every two seconds, starting with a recognizable magic header that includes the literal string `"ECO Plugs"`. It also resolves `server1.eco-plugs.net` from time to time, but never actually phones home during my capture. Notably, I saw nothing flowing the other direction — no phone-to-plug traffic at all.
 
-This is the key insight: **APs do not forward Wi-Fi↔Wi-Fi unicast onto the Ethernet segment**. Phone and plug are both Wi-Fi clients on the same AP, so their unicast stays inside the AP and HAOS (wired) is blind to it. The capture vantage was wrong.
+**Second capture, while toggling from the phone:**
+Still nothing from phone to plug on the wire. The phone *is* sending out `pyecoplug`-style discovery broadcasts on ports 25 and 5888, but the plug is ignoring them — clearly a different protocol version. Meanwhile, toggling from the phone works perfectly (I went outside; the pump turned on and off), and yet the wire shows nothing.
 
-**Capture #3 — from the phone itself, via PCAPdroid (Android):**
-- Phone sends 152-byte UDP unicast from `:9090 → plug_ip:1022`.
-- Plug replies from `:1022 → phone:9090`.
-- Each command is retransmitted ~4 times.
+That's the moment things clicked: **most APs don't bridge Wi-Fi-to-Wi-Fi unicast onto the wired segment.** The phone and the plug were both Wi-Fi clients on the same access point, so their conversation never crossed onto Ethernet. HAOS was sitting in the wrong seat.
 
-Now we had the command channel.
+**Third capture, this time from the phone itself using PCAPdroid:**
+There it was. The phone fires UDP unicast from `:9090` to the plug at `:1022`. The plug answers back the same way. Each command gets repeated about four times for reliability. Now we had the channel.
 
-### Protocol decode
+### Decoding the packets
 
-The 152-byte payload structure turned out to be:
+Each command is 152 bytes and breaks down like this:
 
-| Bytes | Field |
-|-------|-------|
-| 0–3 | Transaction ID (random per command; response echoes it) |
+| Bytes | What it is |
+|-------|------------|
+| 0–3 | Transaction ID (random per command; the response echoes it back) |
 | 4–15 | Fixed header `17 00 00 00 00 00 00 00 DA E2 0C 00` |
 | 16–71 | XOR-obfuscated body (56 bytes) |
 | 72–75 | `00 00 00 00` |
 | 76–79 | Opcode — `6A` for commands, `69` for queries/replies |
 | 80–83 | State — `00` off, `01` on |
-| 84+ | Padding / response-only fields |
+| 84+ | Padding or response-only fields |
 
-**The body "encryption" is just XOR with the TXID repeated every 4 bytes.** We figured this out by comparing two same-type packets byte-by-byte: the XOR of their bodies exactly matches the XOR of their TXIDs at positions 0, 4, 8, ... — classic fingerprint of a 4-byte repeating key.
+The "encryption" on the body turns out to be **XOR with the 4-byte transaction ID, repeated**. We figured that out by lining up two same-type packets side by side: the XOR of their bodies matched the XOR of their transaction IDs at every 4-byte boundary. That's the classic fingerprint of a short repeating-key XOR.
 
-XOR-decoding the body reveals **a fixed 56-byte plaintext across every command packet**, starting with ASCII `"yvQC"` and containing some bytes that look like arithmetic-progression filler. The plug appears to only validate structure, not content — so to craft a new command packet for any TXID, we XOR the known plaintext with the TXID and plug in the opcode + state byte in plaintext.
+Once you peel the XOR off, the body is the *same 56 bytes every time* — it starts with the ASCII `"yvQC"` and is padded with what looks like simple arithmetic-progression filler. The plug doesn't seem to validate the contents at all, only the structure. So to talk to it, you XOR that known plaintext against a fresh transaction ID and drop in the opcode and state byte.
 
 ### The first live test
 
-Rather than immediately trying to craft a fresh packet, we tested with the simplest thing first: **replay a captured OFF command byte-for-byte** against the plug from the HAOS SSH session:
+Before getting clever, I wanted the simplest possible proof that we understood the channel: **just replay a captured OFF command, byte for byte**, from the HAOS shell.
 
 ```
 python3 /tmp/replay_test.py 192.168.0.87
@@ -79,33 +75,33 @@ python3 /tmp/replay_test.py 192.168.0.87
   state[80:84] = 00000000
 ```
 
-Pool pump physically turned off. Replay works — no nonce or timestamp validation.
+I walked outside. The pump was off. Replay works — there's no nonce, no timestamp, no anti-replay check. The plug just trusts the packet.
 
-### The dynamic crafter
+### Crafting fresh packets
 
-Replay works for one plug but not for a general integration. So we built a crafter that takes `(desired_state)` and produces a valid packet with a fresh random TXID. Verified offline by re-building every captured command packet using the captured TXIDs — all 16 matched byte-for-byte.
+Replay is fine for one plug, but useless for a real integration. So we wrote a small crafter that takes a desired state and produces a valid packet with a fresh random transaction ID. As a sanity check, we re-built every captured command using its captured TXID and confirmed all sixteen matched the originals byte for byte.
 
-Live test from the Mac with a never-before-seen TXID (`7cdd2dac`):
+Then a live test from the Mac with a transaction ID the plug had never seen before:
 
 ```
 [OFF] txid=7cdd2dac sending 152 bytes
   reply: txid=7cdd2dac state=OFF
 ```
 
-Pump off. Then ON with another fresh TXID. Pump on. Dynamic crafting proven.
+Pump off. Then on with another fresh ID. Pump on. We were officially driving the thing.
 
-### Shipping
+### Wrapping it up
 
-- `custom_components/ecoplug/protocol.py` — 150-line pure-asyncio module with `craft_command`, `craft_query`, `send_and_wait`.
-- `custom_components/ecoplug/switch.py` — thin HA switch-platform wrapper, 10-second poll.
-- 8 unit tests including byte-exact reproduction of a captured packet.
-- Deployed to `/config/custom_components/ecoplug/` via SSH, restart HA, switch appears and works.
-- Tagged v0.2.0 and published as a GitHub release so HACS users can install it as a custom repository.
+- `custom_components/ecoplug/protocol.py` — about 150 lines of pure asyncio, with `craft_command`, `craft_query`, and `send_and_wait`.
+- `custom_components/ecoplug/switch.py` — a thin Home Assistant switch wrapper that polls every 10 seconds.
+- 8 unit tests, including a byte-for-byte rebuild of a captured packet.
+- Deployed via SSH to `/config/custom_components/ecoplug/`, restart Home Assistant, switch shows up, switch works.
+- Tagged v0.2.0 and cut a GitHub release so anyone can install it through HACS as a custom repository.
 
 ## Credit
 
 **Investigation, protocol analysis, Python, tests, documentation:** [Claude Code](https://claude.com/claude-code) (Opus 4.7).
 
-**Hardware + physical validation + direction:** [Kunal Khosla](https://github.com/kunalkhosla).
+**Hardware, physical validation, and pointing at the next thing to try:** [Kunal Khosla](https://github.com/kunalkhosla).
 
-If you own a DEWENWILS / ECO Plugs-family unit and Google Home integration is broken for you too, give [the integration](https://github.com/kunalkhosla/ecoplug-homeassistant) a try. Issues and PRs welcome.
+If you've got a [DEWENWILS / ECO Plugs](https://www.amazon.com/DEWENWILS-Outdoor-Wireless-Controller-Compatible/dp/B07PP2KNNH) box and Google Home is broken for you too, [the integration](https://github.com/kunalkhosla/ecoplug-homeassistant) is right here. Issues and PRs welcome.
