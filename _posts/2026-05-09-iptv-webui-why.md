@@ -9,9 +9,33 @@ excerpt_override: "What an IPTV reseller's app actually is, why a self-hosted br
 
 I pay an IPTV reseller about a hundred dollars a year. They give me an `m3u` URL, a username and password, and a panel host. In exchange I get several thousand live channels, a backlog of tens of thousands of movies, and a home for whatever they call their library this week.
 
-The streams themselves are fine. The *interface* the reseller ships to consume them is a parade of bad choices. So last night I wrapped the whole thing in [my own UI](https://github.com/kunalkhosla/iptv-webui) and stopped using anyone else's.
+The streams themselves are fine. The *interface* the reseller ships to consume them is a parade of bad choices. So I wrapped the whole thing in [my own UI](https://github.com/kunalkhosla/iptv-webui) — built paired with Claude — and stopped using anyone else's.
 
 This is what a reseller's app actually is, why a browser-based UI beats it on every axis I care about, and the things that quietly fall out the moment your viewing data lives on a server you control.
+
+## what the UI actually does
+
+Before the why, the what. A handful of features carry most of the experience; the rest of the post is about why a webpage was the right shape to deliver them.
+
+**TMDB enrichment.** Movies and series carry TMDB metadata — year, rating, runtime, synopsis, poster, backdrop — cached on the server and rendered alongside each stream. A rotating featured-title hero sits at the top of every catalog (the *Mononoke* card in the movies shot, *Tum Jo Mile* in the series one). Without this layer, the catalog is a wall of bare filenames; with it, it looks like something you'd actually browse.
+
+![The movies page on a phone. A TMDB-enriched featured hero up top — title, year, rating, runtime, synopsis, play button. Language and quality chips across the middle. A Continue Watching shelf at the bottom with resume-position percentages.](/blogs/assets/images/iptv-webui-movies.png)
+
+**A real EPG.** For the channels the panel hands back program data on — 751 of 4,802 in my install — the live tab shows a time-aligned grid with a "now" line tracking system time. The remaining 4,151 still play fine; they're filtered into their own tab so the guide view doesn't drown in empty rows.
+
+![The live TV guide. Category chips across the top (All / Favorites / 4K / Movies / Sports / News / Music), then a "with program data" / "without" split below them. The grid is current and next-hour programs per channel; the red vertical line tracks now.](/blogs/assets/images/iptv-webui-live.png)
+
+**Filter chips.** Each catalog has a row of chips that narrow the view to a single slice — English, Hindi, Punjabi, Urdu, 4K, USA, India. One tap drops me from "8,500 channels" to "the few hundred I'd actually open right now." Whatever doesn't classify cleanly stays under "All."
+
+**Continue Watching and Recently Played.** Both shelves are derived from the same server-side state file that powers cross-device sync (more on that below). Resume position is stored as a percentage, so movies, series, and live channels share one schema and one shelf component.
+
+![The series catalog. Same shape as movies — featured hero, language chips, Continue Watching shelf — but per-show.](/blogs/assets/images/iptv-webui-series.png)
+
+**Per-episode metadata.** Inside a series, every episode gets a still and a short synopsis from TMDB, with runtime from the panel. The season picker at the top remembers the last season you opened — *Severance* on the iPad doesn't drop you back at Season 1 when you were halfway through Season 2 on the laptop.
+
+![Inside a series. Season picker at the top, then a per-episode list with thumbnails, runtimes, and synopses. The check on episode 1 is the per-episode watched flag, stored server-side in `data/user-state.json` so every device sees the same state.](/blogs/assets/images/iptv-webui-series-detail.png)
+
+Most of these are variations on a single pattern: cache the slow thing on the server, let the page be a thin view. The rest of this post is what that pattern is *for*.
 
 ## what a reseller's app actually is
 
@@ -27,8 +51,6 @@ Even when the player is fine, the catalog UX is invariably miserable: 8,500 chan
 ## what I wanted instead
 
 A web browser. That was the whole north star.
-
-![The movies page rendered as a regular webpage on a phone — featured title, continue-watching row, language filters. No app install, no TestFlight.](/blogs/assets/images/iptv-webui-movies.png)
 
 If the UI is a webpage on a domain I control, then:
 
@@ -50,8 +72,6 @@ A small Express server sits in front of the panel's JSON API. It:
 
 The frontend is a single HTML file, a single CSS file, a single JS file. ~1,000 lines each, no build pipeline, deploy = `docker compose up`.
 
-![The live TV guide — 4,802 channels grouped by category, with current and next programs visible at a glance. The reseller's "8,500 channels in a flat list" turned into an actual EPG.](/blogs/assets/images/iptv-webui-live.png)
-
 ## the privacy posture
 
 This is the part that surprises people who haven't looked at IPTV apps recently. The privacy gain from self-hosting isn't an abstraction; it's a list of things that *stop happening*:
@@ -70,11 +90,7 @@ I'm not pretending the panel is private — the reseller knows what subscription
 
 The single nicest thing this project does, and the one I didn't see coming when I started it, is that *all viewing state lives on the server*.
 
-![The series catalog with a continue-watching row that follows you across devices — start on the laptop, pick up on the iPad.](/blogs/assets/images/iptv-webui-series.png)
-
-Last-played timestamp per channel and movie. Favorites per mode. Recents. A watched flag per series episode. Last-episode bookmark per series. They all live in two JSON files in the container's data volume, hydrated into the page on every load and PUT back to the server on every change.
-
-![Inside a series — season picker, per-episode watched indicators, last-watched bookmark. All stored server-side in `data/user-state.json`, so every device sees the same source of truth.](/blogs/assets/images/iptv-webui-series-detail.png)
+Last-played timestamp per channel and movie. Favorites per mode. Recents. A watched flag per series episode. Last-episode bookmark per series. Last-selected season per show. They all live in two JSON files in the container's data volume, hydrated into the page on every load and PUT back to the server on every change.
 
 This means:
 
