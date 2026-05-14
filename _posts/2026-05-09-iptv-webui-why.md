@@ -28,6 +28,8 @@ Even when the player is fine, the catalog UX is invariably miserable: 8,500 chan
 
 A web browser. That was the whole north star.
 
+![The movies page rendered as a regular webpage on a phone — featured title, continue-watching row, language filters. No app install, no TestFlight.](/blogs/assets/images/iptv-webui-movies.png)
+
 If the UI is a webpage on a domain I control, then:
 
 - Every device with a browser uses it. Laptop, tablet, phone, the kitchen Nest Hub, my parents' house when they want a soccer match. No app installs, no per-platform builds, no TestFlight rotations.
@@ -48,6 +50,8 @@ A small Express server sits in front of the panel's JSON API. It:
 
 The frontend is a single HTML file, a single CSS file, a single JS file. ~1,000 lines each, no build pipeline, deploy = `docker compose up`.
 
+![The live TV guide — 4,802 channels grouped by category, with current and next programs visible at a glance. The reseller's "8,500 channels in a flat list" turned into an actual EPG.](/blogs/assets/images/iptv-webui-live.png)
+
 ## the privacy posture
 
 This is the part that surprises people who haven't looked at IPTV apps recently. The privacy gain from self-hosting isn't an abstraction; it's a list of things that *stop happening*:
@@ -66,7 +70,11 @@ I'm not pretending the panel is private — the reseller knows what subscription
 
 The single nicest thing this project does, and the one I didn't see coming when I started it, is that *all viewing state lives on the server*.
 
+![The series catalog with a continue-watching row that follows you across devices — start on the laptop, pick up on the iPad.](/blogs/assets/images/iptv-webui-series.png)
+
 Last-played timestamp per channel and movie. Favorites per mode. Recents. A watched flag per series episode. Last-episode bookmark per series. They all live in two JSON files in the container's data volume, hydrated into the page on every load and PUT back to the server on every change.
+
+![Inside a series — season picker, per-episode watched indicators, last-watched bookmark. All stored server-side in `data/user-state.json`, so every device sees the same source of truth.](/blogs/assets/images/iptv-webui-series-detail.png)
 
 This means:
 
