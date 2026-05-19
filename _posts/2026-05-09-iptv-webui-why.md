@@ -17,7 +17,7 @@ This is what a reseller's app actually is, why a browser-based UI beats it on ev
 
 Before the why, the what. A handful of features carry most of the experience; the rest of the post is about why a webpage was the right shape to deliver them.
 
-**TMDB enrichment.** Movies and series carry TMDB metadata — year, rating, runtime, synopsis, poster, backdrop — cached on the server and rendered alongside each stream. A rotating featured-title hero sits at the top of every catalog (the *Mononoke* card in the movies shot, *Tum Jo Mile* in the series one). Without this layer, the catalog is a wall of bare filenames; with it, it looks like something you'd actually browse.
+**TMDB enrichment, deeply.** Movies and series carry TMDB metadata — year, rating, runtime, synopsis, poster, backdrop, **plus** cast, directors, keywords, genres, original-language codes, `belongs_to_collection`, and the `recommendations[]` / `similar[]` lists. All cached on the server, all rendered alongside each stream. A rotating featured-title hero sits at the top of every catalog (the *Mononoke* card in the movies shot, *Tum Jo Mile* in the series one). Without this layer, the catalog is a wall of bare filenames; with it, it looks like something you'd actually browse — and every feature further down this list (search, More Like This rails, the kid-cert gate, faceted chips) is just the server reading another field off this same cache.
 
 ![The movies page on a phone. A TMDB-enriched featured hero up top — title, year, rating, runtime, synopsis, play button. Language and quality chips across the middle. A Continue Watching shelf at the bottom with resume-position percentages.](/blogs/assets/images/iptv-webui-movies.png)
 
@@ -27,6 +27,8 @@ Before the why, the what. A handful of features carry most of the experience; th
 
 **Filter chips.** Each catalog has a row of chips that narrow the view to a single slice — English, Hindi, Punjabi, Urdu, 4K, USA, India. One tap drops me from "8,500 channels" to "the few hundred I'd actually open right now." Whatever doesn't classify cleanly stays under "All."
 
+**Search that understands the library.** The search box reads each whitespace token as a possible *facet* — year, decade, genre, language, original-language code, or a free-text fragment — and AND-combines them against the TMDB-enriched catalog. Typing `thriller ajay devgan` resolves to genre = *Thriller* + actor = Ajay Devgn, because the cache has every film's top-three cast list and director list pre-baked into the search index. Spelling slippage between "Devgan" and "Devgn" doesn't drop the match — user tokens collapse to 4-char prefixes against the haystack. `2014 christopher nolan` returns *Interstellar*, alone. `tamil action 2010s` returns the slice the panel's flat search couldn't have surfaced if you'd typed an essay. It works because *everything is a facet on the same TMDB-cache row* — the bullet above does most of the actual labour; this one is just the query parser on top.
+
 **Continue Watching and Recently Played.** Both shelves are derived from the same server-side state file that powers cross-device sync (more on that below). Resume position is stored as a percentage, so movies, series, and live channels share one schema and one shelf component.
 
 ![The series catalog. Same shape as movies — featured hero, language chips, Continue Watching shelf — but per-show.](/blogs/assets/images/iptv-webui-series.png)
@@ -34,6 +36,14 @@ Before the why, the what. A handful of features carry most of the experience; th
 **Per-episode metadata.** Inside a series, every episode gets a still and a short synopsis from TMDB, with runtime from the panel. The season picker at the top remembers the last season you opened — *Severance* on the iPad doesn't drop you back at Season 1 when you were halfway through Season 2 on the laptop.
 
 ![Inside a series. Season picker at the top, then a per-episode list with thumbnails, runtimes, and synopses. The check on episode 1 is the per-episode watched flag, stored server-side in `data/user-state.json` so every device sees the same state.](/blogs/assets/images/iptv-webui-series-detail.png)
+
+**A detail page that uses the whole screen.** Tap a movie or episode and the page splits in two. Left half is a backdrop-lit showcard — poster, title in marquee letters, plot, and the action row (Play / My List / Trailer / Download). Right half is a tabbed pane: *Episodes* (for series), *More Like This*, *Cast*. The recommendations come from TMDB's `recommendations[]` / `similar[]` / `belongs_to_collection` / director fields, intersected with the local catalog so every tile is something the household can actually play. The cast portraits are clickable — tap one and you get that actor's full filmography in the same shape. Nothing on the page scrolls vertically; rails inside the right pane scroll horizontally.
+
+![Web detail modal. Left: backdrop, perforated poster, title with brass offset shadow, Play / My List / Trailer / kebab. Right: tabs (Episodes / More Like This / Cast) with the cast pane open, showing serrated-edge "ticket stub" portraits for Chevy Chase, Dan Aykroyd, John Candy, Demi Moore, et al.](/blogs/assets/images/iptv-web-detail.png)
+
+**Profiles, and a real kid-safe mode.** Five household members each get a portrait, their own Continue Watching shelf, their own My List. The kid profiles are the part I'm most quietly proud of. Each carries a birth year; the server reads TMDB's MPAA + TV-rating fields on every catalog item and runs an age-tiered allow-list — **G + TV-Y at any age, PG + TV-Y7 at 7+, PG-13 at 10+, TV-14 at 13+, R / TV-MA never.** The filter fires on `/api/home`, `/api/search`, the More Like This rails, the cast filmography view — every server endpoint that hands tiles to a kid profile. A child can't reach an adult title by deep-linking around the home page or by typing the title into search; the rated-out items simply aren't in the response. (The household password lets a parent into the picker; locking *adult* profiles behind a parent-PIN is a separate piece of work I haven't finished yet — filed it as an issue.) The whole thing piggybacks on the TMDB cache: no extra metadata pipeline, no manual labelling — just another field on the row.
+
+**Offline downloads.** The phone client lets you save a movie or episode for offline play. The server runs the source through a 720p ffmpeg pipe on the way out, so the saved file lands at roughly 1 GB instead of the panel's 4–5 GB native bitrate — plane / hotel wifi / outage friendly. Playback prefers the local file when it's present; falls back to the panel when it isn't.
 
 Most of these are variations on a single pattern: cache the slow thing on the server, let the page be a thin view. The rest of this post is what that pattern is *for*.
 
@@ -107,6 +117,25 @@ The cost of building this was small. A `data/user-state.json` file, a single PUT
 Third week of using it: my wife asked where the live cricket was, on a phone, in a different room. I texted her the URL. She opened it. The category I'd been browsing on my laptop ten minutes earlier was already selected; the channel I'd been watching last night was at the top of recents. No app install, no login except the household-wide Basic Auth. She tapped, it played.
 
 Casting hit a similar moment. Open the page on a laptop, click a channel, click cast, pick the Nest Hub. The transcoder the server spawns for live channels (because Chromecasts can't decode MPEG-2) takes about 12 seconds to start producing segments, and then the Hub plays steadily. I never installed an app on the Hub. The Hub doesn't know who my reseller is. Chrome handed the Hub a signed URL on my domain, the Hub fetched it, the bytes that came back were H.264 + AAC, the Hub played them. That's the whole transaction.
+
+## native companions, when a browser isn't enough
+
+The web stays the canonical client. But two native apps now run on top of the same `/api/*` surface — a phone app and an Android TV app, both Kotlin + Jetpack Compose. They exist because a browser can't quite do everything I want: the TV needs proper D-pad focus and a 10-foot UI, the phone wants offline saves and a real lockscreen player.
+
+They're thin clients in the strict sense — the server still owns auth, profiles, indexes, TMDB enrichment, the kid filter, even (for downloads) the transcode pipe. The app is just the rendering layer. Same `khouch_session` + `khouch_profile` cookies the browser uses, persisted in DataStore via an OkHttp `CookieJar`. So favoriting a movie on the phone shows the star on the laptop next refresh; "Continue Watching" reflects whichever device played most recently; switching profiles on the phone, the TV picks the new profile up when it wakes.
+
+![Phone home page. Hero with backdrop and Details button, language / quality chips, Continue Watching, Favorites. Bottom nav: Movies / Series / Live.](/blogs/assets/images/iptv-phone-home.png)
+*Phone home. Same hero, same chips, same shelves as the web — just shorter.*
+
+![Phone detail page for Argo (2012). Title, year, runtime, rating. Action row: Play / My List / Favorited / Download 720p. Tagline, plot, director, cast portraits.](/blogs/assets/images/iptv-phone-detail.png)
+*Phone detail. The "Download 720p" label is honest signage — saves go through the server's transcode pipe, so the file is reliably 720p H.264 / AAC regardless of source.*
+
+The TV app is where the design has the most room to breathe — full-screen backdrop, focusable D-pad navigation, larger circular cast portraits. Every screen on the TV is one D-pad press away from playing something.
+
+![Android TV detail page for The Avengers. Full-bleed backdrop, poster on the left, title / cert / runtime / rating / genre, Play / My List / Favorite / Back action row, tagline, Directed by Joss Whedon, cast strip with portrait circles.](/blogs/assets/images/iptv-tv-home.png)
+*Android TV detail. Same backend, same data, sized for ten feet away.*
+
+Importantly: nothing on the native side is required. The web client still works on Android — the phone and TV browsers render the page fine. The apps are there for the things browsers can't quite do (background downloads, D-pad focus, system PiP later), not as a replacement for the canonical surface.
 
 ## what I'd do differently
 
