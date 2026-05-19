@@ -118,11 +118,11 @@ Third week of using it: my wife asked where the live cricket was, on a phone, in
 
 Casting hit a similar moment. Open the page on a laptop, click a channel, click cast, pick the Nest Hub. The transcoder the server spawns for live channels (because Chromecasts can't decode MPEG-2) takes about 12 seconds to start producing segments, and then the Hub plays steadily. I never installed an app on the Hub. The Hub doesn't know who my reseller is. Chrome handed the Hub a signed URL on my domain, the Hub fetched it, the bytes that came back were H.264 + AAC, the Hub played them. That's the whole transaction.
 
-## native companions, when a browser isn't enough
+## a phone companion, when a browser isn't enough
 
-The web stays the canonical client. But two native apps now run on top of the same `/api/*` surface — a phone app and an Android TV app, both Kotlin + Jetpack Compose. They exist because a browser can't quite do everything I want: the TV needs proper D-pad focus and a 10-foot UI, the phone wants offline saves and a real lockscreen player.
+The web stays the canonical client. But a native Android phone app now runs on top of the same `/api/*` surface — Kotlin + Jetpack Compose. It exists because a browser can't quite do everything: offline saves to disk, a real lockscreen player, system Cast picker integration. (A TV companion is in flight and not yet pretty enough to show off.)
 
-They're thin clients in the strict sense — the server still owns auth, profiles, indexes, TMDB enrichment, the kid filter, even (for downloads) the transcode pipe. The app is just the rendering layer. Same `khouch_session` + `khouch_profile` cookies the browser uses, persisted in DataStore via an OkHttp `CookieJar`. So favoriting a movie on the phone shows the star on the laptop next refresh; "Continue Watching" reflects whichever device played most recently; switching profiles on the phone, the TV picks the new profile up when it wakes.
+The phone app is a thin client in the strict sense — the server still owns auth, profiles, indexes, TMDB enrichment, the kid filter, and (for downloads) the transcode pipe. The app is just the rendering layer. Same `khouch_session` + `khouch_profile` cookies the browser uses, persisted in DataStore via an OkHttp `CookieJar`. Favoriting a movie on the phone shows the star on the laptop next refresh; "Continue Watching" reflects whichever device played most recently; switching profiles on the phone, the browser picks the new profile up when you reload.
 
 ![Phone home page. Hero with backdrop and Details button, language / quality chips, Continue Watching, Favorites. Bottom nav: Movies / Series / Live.](/blogs/assets/images/iptv-phone-home.png)
 *Phone home. Same hero, same chips, same shelves as the web — just shorter.*
@@ -130,12 +130,7 @@ They're thin clients in the strict sense — the server still owns auth, profile
 ![Phone detail page for Argo (2012). Title, year, runtime, rating. Action row: Play / My List / Favorited / Download 720p. Tagline, plot, director, cast portraits.](/blogs/assets/images/iptv-phone-detail.png)
 *Phone detail. The "Download 720p" label is honest signage — saves go through the server's transcode pipe, so the file is reliably 720p H.264 / AAC regardless of source.*
 
-The TV app is where the design has the most room to breathe — full-screen backdrop, focusable D-pad navigation, larger circular cast portraits. Every screen on the TV is one D-pad press away from playing something.
-
-![Android TV detail page for The Avengers. Full-bleed backdrop, poster on the left, title / cert / runtime / rating / genre, Play / My List / Favorite / Back action row, tagline, Directed by Joss Whedon, cast strip with portrait circles.](/blogs/assets/images/iptv-tv-home.png)
-*Android TV detail. Same backend, same data, sized for ten feet away.*
-
-Importantly: nothing on the native side is required. The web client still works on Android — the phone and TV browsers render the page fine. The apps are there for the things browsers can't quite do (background downloads, D-pad focus, system PiP later), not as a replacement for the canonical surface.
+Importantly: the native app isn't required. The web client still works on Android — the phone browser renders the page fine. The app is there for the things browsers can't quite do (background downloads via DownloadManager, system Cast notification, system PiP later), not as a replacement for the canonical surface.
 
 ## what I'd do differently
 
